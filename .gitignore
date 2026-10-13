@@ -1,0 +1,13 @@
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Go
+backend/.env
+backend/.env.*
+
+# Node.js
+node_modules/
+frontend/dist/

@@ -1,0 +1,16 @@
+
+services:
+  db:
+    image: postgres:16
+    container_name: am-pro-cleaning-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: AM_Pro_cleaning
+    ports:
+      - "5432:5432"
+    volumes:
+      - am_cleaning_data:/var/lib/postgresql/data
+
+volumes:
+  am_cleaning_data:
