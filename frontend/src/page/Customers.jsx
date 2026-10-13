@@ -32,22 +32,19 @@ export default function Customers() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
 
-  const formatId = (id) => `CUS-${String(id).padStart(3, "0")}`;
-
   const filteredCustomers = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+  const keyword = search.trim().toLowerCase();
 
-    return customers.filter((customer) =>
-      [
-        formatId(customer.customer_id),
-        customer.customer_id,
-        customer.customer_firstname,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(keyword)
-    );
-  }, [customers, search]);
+  return customers.filter((customer) =>
+    [
+      customer.customer_id,
+      customer.customer_firstname,
+      customer.customer_lastname
+    ].some((value) =>
+      String(value ?? "").toLowerCase().includes(keyword)
+    )
+  );
+}, [customers, search]);
 
   const openAddModal = () => {
     setEditingCustomer(null);
@@ -141,7 +138,7 @@ export default function Customers() {
           <button
             type="button"
             onClick={openAddModal}
-            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#9ccc65] hover:bg-[#558b2f] px-4 py-3 text-sm font-semibold text-white shadow-sm transition "
+            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#517ea8] hover:bg-[#385e82] px-4 py-3 mt-6 text-sm font-semibold text-white shadow-sm transition "
           >
             <span className="text-xl leading-none">+</span>
             Add Customer
@@ -181,7 +178,7 @@ export default function Customers() {
                     className="border-t border-[#e6edf8] transition hover:bg-blue-50/50"
                   >
                     <td className="whitespace-nowrap px-6 py-5 text-[#45648e]">
-                      {formatId(customer.customer_id)}
+                      {customer.customer_id}
                     </td>
 
                     <td className="max-w-[250px] px-6 py-5">
