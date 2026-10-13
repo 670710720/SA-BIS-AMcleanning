@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Header from "./components/Header";
+import Department from "./page/Department";
+import NotFound from "./page/NotFound";
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -43,10 +45,7 @@ function App() {
               path="/employee"
               element={<h1 className="text-2xl font-bold">จัดการพนักงาน</h1>}
             />
-            <Route
-              path="/department"
-              element={<h1 className="text-2xl font-bold">จัดการตำแหน่ง</h1>}
-            />
+           <Route path="/department" element={<Department />} />
             <Route
               path="/customer"
               element={<h1 className="text-2xl font-bold">ข้อมูลลูกค้า</h1>}
@@ -55,11 +54,15 @@ function App() {
               path="/payroll"
               element={<h1 className="text-2xl font-bold">เงินเดือนพนักงาน</h1>}
             />
+          <Route path="*" element={<NotFound darkMode={darkMode} />} />
           </Routes>
+          
         </main>
       </div>
     </div>
   );
 }
 
+
 export default App;
+
