@@ -1,126 +1,69 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+
+import { useState } from "react";
+import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Header from "./components/Header";
+import Department from "./page/Department";
+import NotFound from "./page/NotFound";
 
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [darkMode, setDarkMode] = useState(false);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div
+      className={`min-h-screen transition-colors duration-300 ${
+        darkMode
+          ? "bg-gray-950 text-white"
+          : "bg-gray-50 text-gray-900"
+      }`}
+    >
+      {/* Header เต็มความกว้าง อยู่บนสุด */}
+      <Header
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+      />
+
+      {/* พื้นที่ด้านล่าง Header */}
+      <div>
+        {/* Navbar อยู่ซ้ายใต้ Header */}
+        <div className="fixed left-0 top-20 bottom-0 z-40 w-64">
+          <Navbar darkMode={darkMode} />
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+
+        {/* เนื้อหาหลักอยู่ขวา Navbar */}
+        <main
+          className={`ml-64 min-h-[calc(100vh-5rem)] p-8 transition-colors duration-300 ${
+            darkMode ? "bg-gray-950" : "bg-gray-50"
+          }`}
         >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+          <Routes>
+            <Route
+              path="/"
+              element={<h1 className="text-2xl font-bold">หน้าหลัก</h1>}
+            />
+            <Route
+              path="/employee"
+              element={<h1 className="text-2xl font-bold">จัดการพนักงาน</h1>}
+            />
+           <Route path="/department" element={<Department />} />
+            <Route
+              path="/customer"
+              element={<h1 className="text-2xl font-bold">ข้อมูลลูกค้า</h1>}
+            />
+            <Route
+              path="/payroll"
+              element={<h1 className="text-2xl font-bold">เงินเดือนพนักงาน</h1>}
+            />
+          <Route path="*" element={<NotFound darkMode={darkMode} />} />
+          </Routes>
+          
+        </main>
+      </div>
+    </div>
+  );
 }
 
-export default App
 
-
+export default App;
 
