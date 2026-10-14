@@ -2,28 +2,21 @@
 import { useMemo, useState } from "react";
 
 const initialCustomers = [
-  { customer_id: 1, customer_firstname: "บริษัท ระยองอุตสาหกรรม", customer_lastname: "จำกัด", phone_number: "038611201", address: "นิคมอุตสาหกรรมมาบตาพุด จ.ระยอง", tax_id: "0105567001001", start_date: "2024-01-15" },
-  { customer_id: 2, customer_firstname: "บริษัท บ้านฉางออโต้พาร์ท", customer_lastname: "จำกัด", phone_number: "038602202", address: "อ.บ้านฉาง จ.ระยอง", tax_id: "0105567001002", start_date: "2024-03-01" },
-  { customer_id: 3, customer_firstname: "บริษัท เอเชียแพ็กเกจจิ้ง", customer_lastname: "จำกัด", phone_number: "038641203", address: "อ.นิคมพัฒนา จ.ระยอง", tax_id: "0105567001003", start_date: "2024-05-10" },
-  { customer_id: 4, customer_firstname: "การไฟฟ้าส่วนภูมิภาค", customer_lastname: "สาขาระยอง", phone_number: "038611204", address: "อ.เมืองระยอง จ.ระยอง", tax_id: "0994000165001", start_date: "2024-06-01" },
-  { customer_id: 5, customer_firstname: "การประปาส่วนภูมิภาค", customer_lastname: "สาขาบ้านฉาง", phone_number: "038602205", address: "อ.บ้านฉาง จ.ระยอง", tax_id: "0994000165002", start_date: "2024-08-15" },
-  { customer_id: 6, customer_firstname: "หมู่บ้านพฤกษาระยอง", customer_lastname: "นิติบุคคลหมู่บ้านจัดสรร", phone_number: "038621206", address: "ต.ทับมา อ.เมืองระยอง จ.ระยอง", tax_id: "0105567001006", start_date: "2025-01-01" },
-  { customer_id: 7, customer_firstname: "หมู่บ้านเดอะกรีนการ์เด้น", customer_lastname: "นิติบุคคลหมู่บ้านจัดสรร", phone_number: "038621207", address: "ต.เนินพระ อ.เมืองระยอง จ.ระยอง", tax_id: "0105567001007", start_date: "2025-02-01" },
-  { customer_id: 8, customer_firstname: "บริษัท โกลเด้นโฮมพร็อพเพอร์ตี้", customer_lastname: "จำกัด", phone_number: "038659208", address: "ต.ปลวกแดง อ.ปลวกแดง จ.ระยอง", tax_id: "0105567001008", start_date: "2025-04-01" },
+  { customer_id: 1, customer_firstname: "บริษัท ระยองอุตสาหกรรม", customer_lastname: "จำกัด", phone_number: "038611201", address: "นิคมอุตสาหกรรมมาบตาพุด จ.ระยอง", tax_id: "0105567001001", start_date: "2024-01-15" , type_service: "รายเดือน" },
+  { customer_id: 2, customer_firstname: "บริษัท บ้านฉางออโต้พาร์ท", customer_lastname: "จำกัด", phone_number: "038602202", address: "อ.บ้านฉาง จ.ระยอง", tax_id: "0105567001002", start_date: "2024-03-01" , type_service: "รายเดือน"},
+  { customer_id: 3, customer_firstname: "บริษัท เอเชียแพ็กเกจจิ้ง", customer_lastname: "จำกัด", phone_number: "038641203", address: "อ.นิคมพัฒนา จ.ระยอง", tax_id: "0105567001003", start_date: "2024-05-10"  , type_service: "รายวัน" },
+  { customer_id: 4, customer_firstname: "การไฟฟ้าส่วนภูมิภาค", customer_lastname: "สาขาระยอง", phone_number: "038611204", address: "อ.เมืองระยอง จ.ระยอง", tax_id: "0994000165001", start_date: "2024-06-01"  , type_service: "รายวัน"},
+  { customer_id: 5, customer_firstname: "การประปาส่วนภูมิภาค", customer_lastname: "สาขาบ้านฉาง", phone_number: "038602205", address: "อ.บ้านฉาง จ.ระยอง", tax_id: "0994000165002", start_date: "2024-08-15"  , type_service: "รายเดือน"},
+  { customer_id: 6, customer_firstname: "หมู่บ้านพฤกษาระยอง", customer_lastname: "นิติบุคคลหมู่บ้านจัดสรร", phone_number: "038621206", address: "ต.ทับมา อ.เมืองระยอง จ.ระยอง", tax_id: "0105567001006", start_date: "2025-01-01"  , type_service: "รายวัน"},
+  { customer_id: 7, customer_firstname: "หมู่บ้านเดอะกรีนการ์เด้น", customer_lastname: "นิติบุคคลหมู่บ้านจัดสรร", phone_number: "038621207", address: "ต.เนินพระ อ.เมืองระยอง จ.ระยอง", tax_id: "0105567001007", start_date: "2025-02-01"  , type_service: "รายวัน"},
+  { customer_id: 8, customer_firstname: "บริษัท โกลเด้นโฮมพร็อพเพอร์ตี้", customer_lastname: "จำกัด", phone_number: "038659208", address: "ต.ปลวกแดง อ.ปลวกแดง จ.ระยอง", tax_id: "0105567001008", start_date: "2025-04-01"  , type_service: "รายเดือน"},
 ];
+
+//แก้FormatID
+//const formatId = (id) => `CUS-${String(id).padStart(3, "0")}`;
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
-
-function formatDate(date) {
-  if (!date) return "-";
-
-  return new Date(`${date}T00:00:00`).toLocaleDateString("th-TH", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 export default function Customers() {
   const [customers, setCustomers] = useState(initialCustomers);
@@ -32,25 +25,30 @@ export default function Customers() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
 
+  //ช่องค้นหา
   const filteredCustomers = useMemo(() => {
-  const keyword = search.trim().toLowerCase();
+    const keyword = search.trim().toLowerCase();
 
-  return customers.filter((customer) =>
-    [
-      customer.customer_id,
-      customer.customer_firstname,
-      customer.customer_lastname
-    ].some((value) =>
-      String(value ?? "").toLowerCase().includes(keyword)
-    )
-  );
-}, [customers, search]);
+    return customers.filter((customer) =>
+      [
+        //formatId(customer.customer_id),
+        customer.customer_id,
+        customer.customer_firstname,
+        customer.customer_lastname,
+        customer.type_service,
+      ].some((value) =>
+        String(value ?? "").toLowerCase().includes(keyword)
+      )
+      );
+  }, [customers, search]);
 
+  //Add
   const openAddModal = () => {
     setEditingCustomer(null);
     setModalOpen(true);
   };
 
+  //Edit
   const openEditModal = (customer) => {
     setEditingCustomer(customer);
     setModalOpen(true);
@@ -89,7 +87,7 @@ export default function Customers() {
     closeModal();
   };
 
-    
+  //Delete  
   const deleteCustomer = (customer) => {
     const name = `${customer.customer_firstname} ${customer.customer_lastname}`;
 
@@ -104,19 +102,18 @@ export default function Customers() {
     );
   };
 
-
+  
   return (
     <div className="min-h-screen bg-[#f8faff] px-4 py-6 text-[#18345e] sm:px-6 lg:px-9 lg:py-8">
       <main className="mx-auto w-full max-w-[1600px]">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Customers
-          </h1>
-          <p className="mt-1 text-sm text-[#8195b8] sm:text-base">
+          <h1 className="text-2xl font-bold">ข้อมูลลูกค้า</h1>
+          <p className="my-3 text-sm text-[#8195b8] sm:text-base">
             Manage customer information and service contracts
           </p>
         </div>
 
+        {/*ค้นหา*/}
         <section className="mb-7 flex flex-col gap-3 xl:flex-row xl:items-center">
           <div className="relative min-w-0 flex-1">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl leading-none text-[#8195b8]">
@@ -129,7 +126,7 @@ export default function Customers() {
               onChange={(event) => {
                 setSearch(event.target.value);
               }}
-              placeholder="ค้นหารหัสหรือชื่อของลูกค้า"
+              placeholder="ค้นหารหัส ชื่อของลูกค้า"
               className="w-full rounded-lg border border-[#dce6f6] bg-white py-3 pl-12 pr-4 text-sm outline-none transition placeholder:text-[#8195b8] focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
@@ -138,10 +135,10 @@ export default function Customers() {
           <button
             type="button"
             onClick={openAddModal}
-            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#517ea8] hover:bg-[#385e82] px-4 py-3 mt-6 text-sm font-semibold text-white shadow-sm transition "
+            className="flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#517ea8] hover:bg-[#385e82] px-4 py-3 text-sm font-semibold text-white shadow-sm transition "
           >
             <span className="text-xl leading-none">+</span>
-            Add Customer
+            เพิ่มข้อมูลลูกค้า
           </button>
         </div>
         </section>
@@ -158,8 +155,9 @@ export default function Customers() {
                     "เบอร์โทรศัพท์",
                     "เลขผู้เสียภาษี",
                     "วันที่เริ่มใช้บริการ",
-                    "Edit",
-                    "Delete",
+                    "ประเภทบริการ",
+                    "แก้ไข",
+                    "ลบ",
                   ].map((heading) => (
                     <th
                       key={heading}
@@ -174,10 +172,12 @@ export default function Customers() {
               <tbody>
                 {filteredCustomers.map((customer) => (
                   <tr
+                    //key={formatId(customer.customer_id)}
                     key={customer.customer_id}
                     className="border-t border-[#e6edf8] transition hover:bg-blue-50/50"
                   >
                     <td className="whitespace-nowrap px-6 py-5 text-[#45648e]">
+                      {/*formatId(customer.customer_id)*/}
                       {customer.customer_id}
                     </td>
 
@@ -203,7 +203,11 @@ export default function Customers() {
                     </td>
 
                     <td className="whitespace-nowrap px-6 py-5 text-[#45648e]">
-                      {formatDate(customer.start_date)}
+                      {customer.start_date}
+                    </td>
+
+                    <td className="whitespace-nowrap px-6 py-5 text-[#45648e]">
+                      {customer.type_service}
                     </td>
 
                     {/* Edit */}
@@ -346,6 +350,13 @@ export default function Customers() {
                     className={inputClass}
                   />
                 </label>
+
+                <FormField
+                  className="sm:col-span-2"
+                  label="ประเภทบริการ"
+                  name="type_service"
+                  defaultValue={editingCustomer?.type_service}
+                />
               </div>
 
               <div className="flex justify-end gap-3 pt-3">
@@ -377,9 +388,10 @@ function FormField({
   name,
   required = false,
   defaultValue = "",
+  className = "",
 }) {
   return (
-    <label className="block text-sm text-slate-700">
+    <label className={`block text-sm text-slate-700 ${className}`}>
       {label}
       <input
         name={name}
