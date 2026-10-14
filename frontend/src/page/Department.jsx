@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useState } from 'react';
 
 async function apiRequest(url, options = {}) {
@@ -44,6 +43,12 @@ function Department() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // State สำหรับ Modal เพิ่มและแก้ไขแผนก
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingDepartment, setEditingDepartment] = useState(null);
+  const [departmentName, setDepartmentName] = useState('');
+  const [modalError, setModalError] = useState('');
+
   const loadDepartments = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -83,62 +88,91 @@ function Department() {
     );
   });
 
-  async function handleAdd() {
-    const name = window.prompt('กรอกชื่อแผนก:');
-
-    if (!name?.trim()) return;
-
-    if (name.trim().length > 15) {
-      window.alert('Department name must not exceed 15 characters.');
-      return;
-    }
-
-    setSaving(true);
-    setError('');
-
-    try {
-      await apiRequest('/api/departments', {
-        method: 'POST',
-        body: JSON.stringify({
-          department_name: name.trim(),
-        }),
-      });
-
-      await loadDepartments();
-      window.alert('เพิ่มแผนกสำเร็จ');
-    } catch (err) {
-      setError(err.message || 'เพิ่มแผนกไม่สำเร็จ');
-    } finally {
-      setSaving(false);
-    }
+  // เปิด Modal สำหรับเพิ่มแผนก
+  function handleAdd() {
+    setEditingDepartment(null);
+    setDepartmentName('');
+    setModalError('');
+    setIsModalOpen(true);
   }
 
-  // แก้ไขแผนกจากการ์ดที่กด
-  async function handleEdit(selected) {
-    const name = window.prompt('Department name:', selected.name);
+  // เปิด Modal สำหรับแก้ไขแผนกที่เลือก
+  function handleEdit(selected) {
+    setEditingDepartment(selected);
+    setDepartmentName(selected.name);
+    setModalError('');
+    setIsModalOpen(true);
+  }
 
-    if (!name?.trim()) return;
+  // ปิด Modal
+  function handleCloseModal() {
+    if (saving) return;
 
-    if (name.trim().length > 15) {
-      window.alert('Department name must not exceed 15 characters.');
+    setIsModalOpen(false);
+    setEditingDepartment(null);
+    setDepartmentName('');
+    setModalError('');
+  }
+
+  // บันทึกข้อมูลเพิ่มหรือแก้ไขแผนก
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    const name = departmentName.trim();
+
+    if (!name) {
+      setModalError('กรุณากรอกชื่อแผนก');
+      return;
+    }
+
+    if (name.length > 15) {
+      setModalError('ชื่อแผนกต้องมีความยาวไม่เกิน 15 ตัวอักษร');
       return;
     }
 
     setSaving(true);
+    setModalError('');
     setError('');
 
     try {
-      await apiRequest(`/api/departments/${selected.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({
-          department_name: name.trim(),
-        }),
-      });
+      if (editingDepartment) {
+        // แก้ไขแผนก
+        await apiRequest(
+          `/api/departments/${editingDepartment.id}`,
+          {
+            method: 'PUT',
+            body: JSON.stringify({
+              department_name: name,
+            }),
+          }
+        );
+      } else {
+        // เพิ่มแผนก
+        await apiRequest('/api/departments', {
+          method: 'POST',
+          body: JSON.stringify({
+            department_name: name,
+          }),
+        });
+      }
 
+      setIsModalOpen(false);
+      setEditingDepartment(null);
+      setDepartmentName('');
       await loadDepartments();
-      window.alert('แก้ไขแผนกสำเร็จ');
+
+      window.alert(
+        editingDepartment
+          ? 'แก้ไขแผนกสำเร็จ'
+          : 'เพิ่มแผนกสำเร็จ'
+      );
     } catch (err) {
-      setError(err.message || 'แก้ไขแผนกไม่สำเร็จ');
+      setModalError(
+        err.message ||
+        (editingDepartment
+          ? 'แก้ไขแผนกไม่สำเร็จ'
+          : 'เพิ่มแผนกไม่สำเร็จ')
+      );
     } finally {
       setSaving(false);
     }
@@ -171,8 +205,14 @@ function Department() {
 
   return (
     <section className="mx-auto w-full max-w-4xl px-5 py-5 sm:px-8">
-      <h2 className="mb-3 text-3xl font-normal">จัดการตำแหน่ง</h2>
-
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+          จัดการแผนก
+        </h1>
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 sm:text-base">
+          ดูข้อมูลและจัดการแผนก
+        </p>
+      </div>
       {/* Search */}
       <div className="relative mb-6">
         <span className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -230,12 +270,10 @@ function Department() {
               key={department.id}
               className="rounded-xl border border-gray-300 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
             >
-              {/* Department name */}
               <h3 className="text-lg font-semibold text-gray-800">
                 {department.name}
               </h3>
 
-              {/* Description */}
               <p className="mb-5 mt-1 min-h-10 text-sm leading-5 text-gray-500">
                 {departmentDescriptions[department.name] ||
                   'แสดงรายละเอียดการทำงานของแผนก'}
@@ -243,11 +281,8 @@ function Department() {
 
               <div className="mb-4 h-px w-full bg-gray-200" />
 
-              {/* Department information */}
               <div className="mb-5 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600">
-                <span>
-                  รหัสแผนก: {department.id}
-                </span>
+                <span>รหัสแผนก: {department.id}</span>
 
                 <span>
                   พนักงานรวม:{' '}
@@ -290,6 +325,143 @@ function Department() {
         <p className="mt-3 text-right text-xs text-gray-500">
           บันทึกการเปลี่ยนแปลง...
         </p>
+      )}
+
+      {/* Modal เพิ่ม / แก้ไขแผนก */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              handleCloseModal();
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="department-modal-title"
+            className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+          >
+            {/* Modal Header */}
+            <div className="flex shrink-0 items-start justify-between border-b border-gray-200 px-6 py-5 sm:px-8">
+              <div>
+                <h3
+                  id="department-modal-title"
+                  className="text-2xl font-semibold text-gray-900"
+                >
+                  {editingDepartment
+                    ? 'แก้ไขแผนก'
+                    : 'เพิ่มแผนก'}
+                </h3>
+
+                <p className="mt-1 text-sm text-gray-500">
+                  ช่องที่มีเครื่องหมาย{' '}
+                  <span className="text-red-500">*</span>{' '}
+                  จำเป็นต้องกรอก
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                disabled={saving}
+                aria-label="ปิดหน้าต่าง"
+                className="ml-4 rounded-md px-2 text-2xl text-gray-500 hover:bg-gray-100 hover:text-gray-800 disabled:opacity-50"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form
+              onSubmit={handleSubmit}
+              className="overflow-y-auto"
+            >
+              <div className="space-y-5 px-6 py-6 sm:px-8">
+                {editingDepartment && (
+                  <div>
+                    <label
+                      htmlFor="department-id"
+                      className="mb-2 block text-sm font-medium text-gray-800"
+                    >
+                      รหัสแผนก
+                    </label>
+
+                    <input
+                      id="department-id"
+                      type="text"
+                      value={editingDepartment.id}
+                      readOnly
+                      className="h-12 w-full rounded-lg border border-gray-200 bg-gray-100 px-4 text-gray-500 outline-none"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label
+                    htmlFor="department-name"
+                    className="mb-2 block text-sm font-medium text-gray-800"
+                  >
+                    ชื่อแผนก <span className="text-red-500">*</span>
+                  </label>
+
+                  <input
+                    id="department-name"
+                    type="text"
+                    value={departmentName}
+                    onChange={(event) => {
+                      setDepartmentName(event.target.value);
+                      setModalError('');
+                    }}
+                    maxLength={15}
+                    required
+                    autoFocus
+                    placeholder="กรอกชื่อแผนก"
+                    className="h-12 w-full rounded-lg border border-gray-300 px-4 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+
+                  <p className="mt-1 text-xs text-gray-400">
+                    ความยาวไม่เกิน 15 ตัวอักษร
+                  </p>
+                </div>
+
+                {modalError && (
+                  <div
+                    role="alert"
+                    className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                  >
+                    {modalError}
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex shrink-0 flex-wrap justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4 sm:px-8">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  disabled={saving}
+                  className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                >
+                  ยกเลิก
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {saving
+                    ? 'กำลังบันทึก...'
+                    : editingDepartment
+                      ? 'บันทึกการแก้ไข'
+                      : 'เพิ่มแผนก'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </section>
   );
