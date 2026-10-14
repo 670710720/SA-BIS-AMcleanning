@@ -1,4 +1,3 @@
-
 import { useMemo, useState } from "react";
 
 const initialCustomers = [
@@ -13,7 +12,7 @@ const initialCustomers = [
 ];
 
 //แก้FormatID
-//const formatId = (id) => `CUS-${String(id).padStart(3, "0")}`;
+//const formatId = (id) => `CUS${String(id).padStart(2, "0")}`;
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
@@ -35,7 +34,11 @@ export default function Customers() {
         customer.customer_id,
         customer.customer_firstname,
         customer.customer_lastname,
-        customer.type_service,
+        //customer.phone_number,
+        //customer.address,
+        //customer.tax_id,
+        //customer.start_date,
+        //customer.type_service,
       ].some((value) =>
         String(value ?? "").toLowerCase().includes(keyword)
       )
@@ -126,7 +129,7 @@ export default function Customers() {
               onChange={(event) => {
                 setSearch(event.target.value);
               }}
-              placeholder="ค้นหารหัส ชื่อของลูกค้า"
+              placeholder="ค้นหารหัส ชื่อ-นามสกุลลูกค้า"
               className="w-full rounded-lg border border-[#dce6f6] bg-white py-3 pl-12 pr-4 text-sm outline-none transition placeholder:text-[#8195b8] focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>

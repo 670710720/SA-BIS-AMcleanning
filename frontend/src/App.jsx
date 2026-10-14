@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
+import Login from "./page/Login"; //login
 import Navbar from "./components/Navbar";
 import Header from "./components/Header";
 import Department from "./page/Department";
@@ -37,6 +38,7 @@ function App() {
           }`}
         >
           <Routes>
+            <Route path="/login" element={<Login />} /> {/*login*/}
             <Route
               path="/"
               element={<h1 className="text-2xl font-bold">หน้าหลัก</h1>}
