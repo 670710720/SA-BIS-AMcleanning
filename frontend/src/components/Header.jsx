@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; //แก้ตรงนี่
 import {
   Moon,
   Sun,
@@ -8,8 +8,9 @@ import {
   LogOut,
 } from "lucide-react";
 
-export default function Header({ darkMode, setDarkMode }) {
+export default function Header({ darkMode, setDarkMode }) { //ตรงนี่
   const [showProfile, setShowProfile] = useState(false);
+  const navigate = useNavigate(); //ถึงนี่
 
   return (
     <header
@@ -77,24 +78,26 @@ export default function Header({ darkMode, setDarkMode }) {
           </div>
 
           <button
-            onClick={() => {
-              const confirmed = window.confirm(
-                "คุณต้องการออกจากระบบหรือไม่?"
-              );
+          onClick={() => {
+            const confirmed = window.confirm(
+              "คุณต้องการออกจากระบบหรือไม่?"
+            );
 
-              if (confirmed) {
-                alert("ระบบ Logout ยังไม่ได้เชื่อมต่อ");
-              }
-            }}
-            className={`flex w-full items-center gap-3 border-t px-3 py-3 text-left text-xs ${
-              darkMode
-                ? "border-white-600 hover:bg-white-700"
-                : "border-white-300 hover:bg-white-300"
-            }`}
-          >
-            <LogOut size={15} />
-            ออกจากระบบ
-          </button>
+            if (confirmed) {
+              localStorage.removeItem("isLoggedIn");
+              setShowProfile(false);
+              navigate("/", { replace: true });
+            }
+          }}
+          className={`flex w-full items-center gap-3 border-t px-3 py-3 text-left text-xs ${
+            darkMode
+              ? "border-gray-700 hover:bg-gray-700"
+              : "border-gray-200 hover:bg-gray-100"
+          }`}
+        >
+          <LogOut size={15} />
+          ออกจากระบบ
+        </button>
         </div>
       )}
     </header>

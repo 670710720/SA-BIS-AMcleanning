@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -27,20 +26,26 @@ type Resource struct {
 	Required []string
 }
 
+// รายการตารางที่ใช้ระบบ CRUD ทั่วไป
+// attendance แยกออกมา เพราะมี Primary Key 2 คอลัมน์
 var resources = map[string]Resource{
 	"departments": {
 		Table: "department",
-		ID: "department_id",
+		ID:    "department_id",
 		Columns: []string{
-			"department_id", "department_name",
+			"department_id",
+			"department_name",
 		},
-		Required: []string{"department_name"},
+		Required: []string{
+			"department_name",
+		},
 	},
 	"employees": {
 		Table: "employees",
-		ID: "employee_id",
+		ID:    "employee_id",
 		Columns: []string{
 			"employee_id",
+			"id_number",
 			"employee_firstname",
 			"employee_lastname",
 			"address",
@@ -53,6 +58,7 @@ var resources = map[string]Resource{
 		},
 		Required: []string{
 			"employee_id",
+			"id_number",
 			"employee_firstname",
 			"employee_lastname",
 			"address",
@@ -65,7 +71,7 @@ var resources = map[string]Resource{
 	},
 	"customers": {
 		Table: "customers",
-		ID: "customer_id",
+		ID:    "customer_id",
 		Columns: []string{
 			"customer_id",
 			"customer_firstname",
@@ -74,20 +80,21 @@ var resources = map[string]Resource{
 			"phone_number",
 			"tax_id",
 			"start_date",
+			"type_service",
 		},
 		Required: []string{
-			"customer_id",
 			"customer_firstname",
 			"customer_lastname",
 			"address",
 			"phone_number",
 			"tax_id",
 			"start_date",
+			"type_service",
 		},
 	},
 	"payroll": {
 		Table: "payroll",
-		ID: "payroll_id",
+		ID:    "payroll_id",
 		Columns: []string{
 			"payroll_id",
 			"salary",
@@ -110,7 +117,9 @@ func writeJSON(w http.ResponseWriter, status int, data any) {
 }
 
 func writeError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, map[string]string{"error": message})
+	writeJSON(w, status, map[string]string{
+		"error": message,
+	})
 }
 
 func normalizeJSON(v any) any {
@@ -123,16 +132,19 @@ func normalizeJSON(v any) any {
 			return f
 		}
 		return string(x)
+
 	case map[string]any:
 		for k, val := range x {
 			x[k] = normalizeJSON(val)
 		}
 		return x
+
 	case []any:
 		for i, val := range x {
 			x[i] = normalizeJSON(val)
 		}
 		return x
+
 	default:
 		return v
 	}
@@ -147,6 +159,7 @@ func readBody(r *http.Request) (map[string]any, error) {
 	if err := decoder.Decode(&body); err != nil {
 		return nil, err
 	}
+
 	if body == nil {
 		return nil, errors.New("ข้อมูลต้องเป็น JSON object")
 	}
@@ -157,9 +170,11 @@ func readBody(r *http.Request) (map[string]any, error) {
 
 func allowedColumns(resource Resource) map[string]bool {
 	result := make(map[string]bool)
+
 	for _, col := range resource.Columns {
 		result[col] = true
 	}
+
 	return result
 }
 
@@ -174,9 +189,11 @@ func validateBody(
 		if !allowed[key] {
 			return fmt.Errorf("ไม่รู้จักคอลัมน์ %s", key)
 		}
+
 		if key == resource.ID && !isCreate {
 			return fmt.Errorf("ห้ามแก้ไขรหัสหลัก %s", resource.ID)
 		}
+
 		if value == nil {
 			return fmt.Errorf("%s ห้ามเป็น null", key)
 		}
@@ -185,6 +202,7 @@ func validateBody(
 	if isCreate {
 		for _, key := range resource.Required {
 			value, exists := body[key]
+
 			if !exists || value == nil || value == "" {
 				return fmt.Errorf("กรุณาระบุ %s", key)
 			}
@@ -196,6 +214,7 @@ func validateBody(
 			if strings.TrimSpace(value) == "" {
 				return errors.New("กรุณาระบุชื่อแผนก")
 			}
+
 			if len([]rune(value)) > 15 {
 				return errors.New("ชื่อแผนกต้องไม่เกิน 15 ตัวอักษร")
 			}
@@ -207,28 +226,50 @@ func validateBody(
 
 func handleDBError(w http.ResponseWriter, err error) {
 	var pgErr *pgconn.PgError
+
 	if errors.As(err, &pgErr) {
 		switch pgErr.Code {
 		case "23505":
-			writeError(w, http.StatusConflict, "ข้อมูลซ้ำกับข้อมูลที่มีอยู่")
+			writeError(
+				w,
+				http.StatusConflict,
+				"ข้อมูลซ้ำกับข้อมูลที่มีอยู่",
+			)
 			return
+
 		case "23503":
-			writeError(w, http.StatusConflict,
-				"ไม่สามารถดำเนินการได้ เนื่องจากมีข้อมูลอื่นอ้างอิงอยู่")
+			writeError(
+				w,
+				http.StatusConflict,
+				"ไม่สามารถดำเนินการได้ เนื่องจากมีข้อมูลอื่นอ้างอิงอยู่",
+			)
 			return
+
 		case "23502":
-			writeError(w, http.StatusBadRequest,
-				"กรุณากรอกข้อมูลที่จำเป็นให้ครบ")
+			writeError(
+				w,
+				http.StatusBadRequest,
+				"กรุณากรอกข้อมูลที่จำเป็นให้ครบ",
+			)
 			return
+
 		case "22P02", "22007", "22008", "22003":
-			writeError(w, http.StatusBadRequest,
-				"รูปแบบหรือค่าของข้อมูลไม่ถูกต้อง")
+			writeError(
+				w,
+				http.StatusBadRequest,
+				"รูปแบบหรือค่าของข้อมูลไม่ถูกต้อง",
+			)
 			return
 		}
 	}
 
 	log.Printf("Database error: %v", err)
-	writeError(w, http.StatusInternalServerError, "เกิดข้อผิดพลาดในฐานข้อมูล")
+
+	writeError(
+		w,
+		http.StatusInternalServerError,
+		"เกิดข้อผิดพลาดในฐานข้อมูล",
+	)
 }
 
 func getResource(r *http.Request) (Resource, bool) {
@@ -236,6 +277,7 @@ func getResource(r *http.Request) (Resource, bool) {
 	return res, ok
 }
 
+// ดึงข้อมูลทั่วไปของแต่ละตาราง
 func listRecords(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -246,19 +288,24 @@ func listRecords(
 
 	if res.Table == "department" {
 		query = `
-			SELECT d.department_id, d.department_name,
-			       COUNT(e.employee_id) AS employee_count
+			SELECT
+				d.department_id,
+				d.department_name,
+				COUNT(e.employee_id) AS employee_count
 			FROM department d
 			LEFT JOIN employees e
-			  ON e.department_id = d.department_id
+				ON e.department_id = d.department_id
 			GROUP BY d.department_id, d.department_name
 			ORDER BY d.department_id
 		`
 	} else {
 		cols := strings.Join(res.Columns, ", ")
+
 		query = fmt.Sprintf(
 			"SELECT %s FROM %s ORDER BY %s",
-			cols, res.Table, res.ID,
+			cols,
+			res.Table,
+			res.ID,
 		)
 	}
 
@@ -296,6 +343,7 @@ func listRecords(
 	writeJSON(w, http.StatusOK, results)
 }
 
+// สร้างข้อมูลใหม่
 func createRecord(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -312,10 +360,8 @@ func createRecord(
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	// Department ไม่มี DEFAULT ของรหัส:
-	// กำหนดรหัสถัดไปให้อัตโนมัติใน transaction
-	if res.Table == "department" {
+	// สร้างรหัสลูกค้าอัตโนมัติ
+	if res.Table == "customers" {
 		tx, err := pool.Begin(r.Context())
 		if err != nil {
 			handleDBError(w, err)
@@ -324,7 +370,7 @@ func createRecord(
 		defer tx.Rollback(r.Context())
 
 		_, err = tx.Exec(r.Context(),
-			"LOCK TABLE department IN EXCLUSIVE MODE")
+			"LOCK TABLE customers IN EXCLUSIVE MODE")
 		if err != nil {
 			handleDBError(w, err)
 			return
@@ -332,19 +378,19 @@ func createRecord(
 
 		var nextID int
 		err = tx.QueryRow(r.Context(),
-			"SELECT COALESCE(MAX(department_id), 0) + 1 FROM department",
+			"SELECT COALESCE(MAX(customer_id), 0) + 1 FROM customers",
 		).Scan(&nextID)
 		if err != nil {
 			handleDBError(w, err)
 			return
 		}
 
-		if nextID < 1 || nextID > 99 {
-			writeError(w, http.StatusConflict, "รหัสแผนกเต็มแล้ว")
+		if nextID > 99999 {
+			writeError(w, http.StatusConflict, "รหัสลูกค้าเต็มแล้ว")
 			return
 		}
 
-		body["department_id"] = nextID
+		body["customer_id"] = nextID
 
 		record, err := insertRecord(r.Context(), tx, res, body)
 		if err != nil {
@@ -361,7 +407,69 @@ func createRecord(
 		return
 	}
 
-	record, err := insertRecord(r.Context(), pool, res, body)
+	// กำหนด department_id อัตโนมัติ
+	if res.Table == "department" {
+		tx, err := pool.Begin(r.Context())
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+		defer tx.Rollback(r.Context())
+
+		_, err = tx.Exec(
+			r.Context(),
+			"LOCK TABLE department IN EXCLUSIVE MODE",
+		)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		var nextID int
+
+		err = tx.QueryRow(
+			r.Context(),
+			"SELECT COALESCE(MAX(department_id), 0) + 1 FROM department",
+		).Scan(&nextID)
+
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		if nextID < 1 || nextID > 99 {
+			writeError(w, http.StatusConflict, "รหัสแผนกเต็มแล้ว")
+			return
+		}
+
+		body["department_id"] = nextID
+
+		record, err := insertRecord(
+			r.Context(),
+			tx,
+			res,
+			body,
+		)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		if err := tx.Commit(r.Context()); err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		writeJSON(w, http.StatusCreated, record)
+		return
+	}
+
+	record, err := insertRecord(
+		r.Context(),
+		pool,
+		res,
+		body,
+	)
 	if err != nil {
 		handleDBError(w, err)
 		return
@@ -385,9 +493,11 @@ func insertRecord(
 	body map[string]any,
 ) (map[string]any, error) {
 	columns := make([]string, 0, len(body))
+
 	for key := range body {
 		columns = append(columns, key)
 	}
+
 	sort.Strings(columns)
 
 	placeholders := make([]string, len(columns))
@@ -407,9 +517,10 @@ func insertRecord(
 	)
 
 	row := executor.QueryRow(ctx, query, values...)
-	result := map[string]any{}
 
+	result := map[string]any{}
 	dest := make([]any, len(res.Columns))
+
 	for i := range dest {
 		dest[i] = new(any)
 	}
@@ -425,6 +536,7 @@ func insertRecord(
 	return result, nil
 }
 
+// แก้ไขข้อมูล
 func updateRecord(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -432,6 +544,7 @@ func updateRecord(
 	res Resource,
 ) {
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+
 	if err != nil || id < 1 {
 		writeError(w, http.StatusBadRequest, "รหัสไม่ถูกต้อง")
 		return
@@ -447,15 +560,22 @@ func updateRecord(
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
 	if len(body) == 0 {
-		writeError(w, http.StatusBadRequest, "ไม่มีข้อมูลที่ต้องการแก้ไข")
+		writeError(
+			w,
+			http.StatusBadRequest,
+			"ไม่มีข้อมูลที่ต้องการแก้ไข",
+		)
 		return
 	}
 
 	columns := make([]string, 0, len(body))
+
 	for key := range body {
 		columns = append(columns, key)
 	}
+
 	sort.Strings(columns)
 
 	sets := make([]string, len(columns))
@@ -465,6 +585,7 @@ func updateRecord(
 		sets[i] = fmt.Sprintf("%s = $%d", col, i+1)
 		values[i] = body[col]
 	}
+
 	values = append(values, id)
 
 	query := fmt.Sprintf(
@@ -477,21 +598,29 @@ func updateRecord(
 	)
 
 	row := pool.QueryRow(r.Context(), query, values...)
+
 	dest := make([]any, len(res.Columns))
+
 	for i := range dest {
 		dest[i] = new(any)
 	}
 
 	if err := row.Scan(dest...); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			writeError(w, http.StatusNotFound, "ไม่พบข้อมูลที่ต้องการแก้ไข")
+			writeError(
+				w,
+				http.StatusNotFound,
+				"ไม่พบข้อมูลที่ต้องการแก้ไข",
+			)
 			return
 		}
+
 		handleDBError(w, err)
 		return
 	}
 
 	result := map[string]any{}
+
 	for i, col := range res.Columns {
 		result[col] = *(dest[i].(*any))
 	}
@@ -499,6 +628,7 @@ func updateRecord(
 	writeJSON(w, http.StatusOK, result)
 }
 
+// ลบข้อมูล
 func deleteRecord(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -506,6 +636,7 @@ func deleteRecord(
 	res Resource,
 ) {
 	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+
 	if err != nil || id < 1 {
 		writeError(w, http.StatusBadRequest, "รหัสไม่ถูกต้อง")
 		return
@@ -513,7 +644,8 @@ func deleteRecord(
 
 	query := fmt.Sprintf(
 		"DELETE FROM %s WHERE %s = $1",
-		res.Table, res.ID,
+		res.Table,
+		res.ID,
 	)
 
 	tag, err := pool.Exec(r.Context(), query, id)
@@ -523,7 +655,11 @@ func deleteRecord(
 	}
 
 	if tag.RowsAffected() == 0 {
-		writeError(w, http.StatusNotFound, "ไม่พบข้อมูลที่ต้องการลบ")
+		writeError(
+			w,
+			http.StatusNotFound,
+			"ไม่พบข้อมูลที่ต้องการลบ",
+		)
 		return
 	}
 
@@ -543,6 +679,7 @@ func main() {
 	}
 
 	ctx := context.Background()
+
 	pool, err := pgxpool.New(ctx, databaseURL)
 	if err != nil {
 		log.Fatal(err)
@@ -555,63 +692,139 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// รองรับ GET, POST, PUT, DELETE ของทุก resource
+	// GET /api/attendance
+	// อ่านข้อมูลการเข้างานโดยเฉพาะ
+	mux.HandleFunc("GET /api/attendance", func(
+		w http.ResponseWriter,
+		r *http.Request,
+	) {
+		query := `
+			SELECT
+				attendance_date,
+				employee_id,
+				status,
+				reason
+			FROM attendance
+			ORDER BY attendance_date DESC, employee_id ASC
+		`
+
+		rows, err := pool.Query(r.Context(), query)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+		defer rows.Close()
+
+		results := []map[string]any{}
+
+		for rows.Next() {
+			var attendanceDate time.Time
+			var employeeID int64
+			var status string
+			var reason *string
+
+			if err := rows.Scan(
+				&attendanceDate,
+				&employeeID,
+				&status,
+				&reason,
+			); err != nil {
+				handleDBError(w, err)
+				return
+			}
+
+			results = append(results, map[string]any{
+				"attendance_date": attendanceDate.Format("2006-01-02"),
+				"employee_id":     employeeID,
+				"status":          status,
+				"reason":          reason,
+			})
+		}
+
+		if err := rows.Err(); err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		writeJSON(w, http.StatusOK, results)
+	})
+
+	// GET: อ่านข้อมูล
 	mux.HandleFunc("GET /api/{resource}", func(
-		w http.ResponseWriter, r *http.Request,
+		w http.ResponseWriter,
+		r *http.Request,
 	) {
 		res, ok := getResource(r)
 		if !ok {
 			writeError(w, http.StatusNotFound, "ไม่พบ API นี้")
 			return
 		}
+
 		listRecords(w, r, pool, res)
 	})
 
+	// POST: เพิ่มข้อมูล
 	mux.HandleFunc("POST /api/{resource}", func(
-		w http.ResponseWriter, r *http.Request,
+		w http.ResponseWriter,
+		r *http.Request,
 	) {
 		res, ok := getResource(r)
 		if !ok {
 			writeError(w, http.StatusNotFound, "ไม่พบ API นี้")
 			return
 		}
+
 		createRecord(w, r, pool, res)
 	})
 
+	// PUT: แก้ไขข้อมูล
 	mux.HandleFunc("PUT /api/{resource}/{id}", func(
-		w http.ResponseWriter, r *http.Request,
+		w http.ResponseWriter,
+		r *http.Request,
 	) {
 		res, ok := getResource(r)
 		if !ok {
 			writeError(w, http.StatusNotFound, "ไม่พบ API นี้")
 			return
 		}
+
 		updateRecord(w, r, pool, res)
 	})
 
+	// DELETE: ลบข้อมูล
 	mux.HandleFunc("DELETE /api/{resource}/{id}", func(
-		w http.ResponseWriter, r *http.Request,
+		w http.ResponseWriter,
+		r *http.Request,
 	) {
 		res, ok := getResource(r)
 		if !ok {
 			writeError(w, http.StatusNotFound, "ไม่พบ API นี้")
 			return
 		}
+
 		deleteRecord(w, r, pool, res)
 	})
 
+	// CORS
 	handler := http.HandlerFunc(func(
-		w http.ResponseWriter, r *http.Request,
+		w http.ResponseWriter,
+		r *http.Request,
 	) {
 		origin := r.Header.Get("Origin")
+
 		if origin == "http://localhost:5173" {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Vary", "Origin")
 		}
 
-		w.Header().Set("Access-Control-Allow-Methods",
-			"GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set(
+			"Access-Control-Allow-Methods",
+			"GET, POST, PUT, DELETE, OPTIONS",
+		)
+		w.Header().Set(
+			"Access-Control-Allow-Headers",
+			"Content-Type",
+		)
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
@@ -630,3 +843,6 @@ func main() {
 	log.Println("Backend running on :8080")
 	log.Fatal(server.ListenAndServe())
 }
+
+
+	
