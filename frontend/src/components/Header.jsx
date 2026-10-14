@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -35,8 +34,10 @@ export default function Header({ darkMode, setDarkMode }) {
       {/* Right Actions */}
       <div className="flex items-center gap-3">
         <button
+          type="button"
           onClick={() => setDarkMode((prev) => !prev)}
           title={darkMode ? "โหมดกลางวัน" : "โหมดกลางคืน"}
+          aria-label={darkMode ? "เปลี่ยนเป็นโหมดกลางวัน" : "เปลี่ยนเป็นโหมดกลางคืน"}
           className={`rounded-full p-2 transition-colors ${
             darkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"
           }`}
@@ -45,9 +46,11 @@ export default function Header({ darkMode, setDarkMode }) {
         </button>
 
         <button
+          type="button"
           onClick={() => setShowProfile((prev) => !prev)}
           title="ดูโปรไฟล์"
-          className={`flex h-10 w-10 items-center justify-center rounded-full ${
+          aria-expanded={showProfile}
+          className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
             darkMode
               ? "bg-gray-700 hover:bg-gray-600"
               : "bg-gray-200 hover:bg-gray-300"
@@ -60,23 +63,37 @@ export default function Header({ darkMode, setDarkMode }) {
       {/* Profile Dropdown */}
       {showProfile && (
         <div
-          className={`absolute right-3 top-full w-56 overflow-hidden rounded-b-md shadow-lg  ${
+          className={`absolute right-3 top-full w-64 overflow-hidden rounded-lg border shadow-lg ${
             darkMode
-              ? "bg-white-800 text-white"
-              : "bg-white-200 text-white-900"
+              ? "border-gray-700 bg-gray-800 text-white"
+              : "border-gray-200 bg-white text-gray-900"
           }`}
         >
           <div className="flex items-center gap-3 p-4">
-            <CircleUserRound size={48} />
-            <span className="font-medium">กมลชนก ศรีสุข</span>
+            <CircleUserRound size={40} />
+            <div>
+              <p className="font-medium">กมลชนก ศรีสุข</p>
+              <p
+                className={`text-xs ${
+                  darkMode ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                พนักงาน
+              </p>
+            </div>
           </div>
 
-          <div className="px-4 pb-4 text-xs">
+          <div
+            className={`px-4 pb-4 text-xs leading-6 ${
+              darkMode ? "text-gray-300" : "text-gray-600"
+            }`}
+          >
             <p>รหัสพนักงาน : 10001</p>
-            <p>แผนก : HR</p>
+            <p>แผนก : ฝ่ายบุคคล</p>
           </div>
 
           <button
+            type="button"
             onClick={() => {
               const confirmed = window.confirm(
                 "คุณต้องการออกจากระบบหรือไม่?"
@@ -86,13 +103,13 @@ export default function Header({ darkMode, setDarkMode }) {
                 alert("ระบบ Logout ยังไม่ได้เชื่อมต่อ");
               }
             }}
-            className={`flex w-full items-center gap-3 border-t px-3 py-3 text-left text-xs ${
+            className={`flex w-full items-center gap-3 border-t px-4 py-3 text-left text-sm transition-colors ${
               darkMode
-                ? "border-white-600 hover:bg-white-700"
-                : "border-white-300 hover:bg-white-300"
+                ? "border-gray-700 hover:bg-gray-700"
+                : "border-gray-200 hover:bg-gray-100"
             }`}
           >
-            <LogOut size={15} />
+            <LogOut size={16} />
             ออกจากระบบ
           </button>
         </div>
