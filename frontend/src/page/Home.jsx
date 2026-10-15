@@ -16,14 +16,17 @@ const API_ENDPOINTS = {
   payroll: '/api/payroll',
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "")
+  .replace(/\/+$/, "");
 
-// เรียก API และตรวจสอบข้อผิดพลาด
 async function apiRequest(url) {
-  const response = await fetch(
-  `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`,
-  )
+  const path = `/${url.replace(/^\/+/, "")}`;
 
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
   const text = await response.text()
 
   let data

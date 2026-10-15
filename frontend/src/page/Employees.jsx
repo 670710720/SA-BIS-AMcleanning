@@ -49,13 +49,17 @@ function displayDate(value) {
   return toDateInput(value)
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "")
+  .replace(/\/+$/, "");
 
-// เรียก API และอ่านข้อความ Error จาก Backend
-async function apiRequest(url, options = {}) {
-  const response = await fetch(
-  `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`,
-  )
+async function apiRequest(url) {
+  const path = `/${url.replace(/^\/+/, "")}`;
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
 
   const data = await response.json().catch(() => null)
 
