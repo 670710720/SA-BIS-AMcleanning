@@ -1,4 +1,38 @@
+
 import { useEffect, useMemo, useState } from "react";
+
+// URL ของ Backend บน Render
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL ||
+  "https://sa-bis-amcleanning.onrender.com"
+).replace(/\/+$/, "");
+
+// ฟังก์ชันเรียก API กลาง
+async function apiRequest(url, options = {}) {
+  const path = `/${url.replace(/^\/+/, "")}`;
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      Accept: "application/json",
+      ...(options.body
+        ? { "Content-Type": "application/json" }
+        : {}),
+      ...options.headers,
+    },
+  });
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(
+      result.error ||
+        `เรียก API ไม่สำเร็จ (${response.status})`
+    );
+  }
+
+  return result;
+}
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
@@ -32,13 +66,7 @@ export default function Customers() {
       setLoading(true);
       setError("");
 
-      const response = await fetch("/api/customers");
-
-      if (!response.ok) {
-        throw new Error("ไม่สามารถโหลดข้อมูลลูกค้าได้");
-      }
-
-      const data = await response.json();
+      const data = await apiRequest("/api/customers");
 
       if (!Array.isArray(data)) {
         throw new Error("รูปแบบข้อมูลลูกค้าไม่ถูกต้อง");
@@ -77,7 +105,6 @@ export default function Customers() {
   };
 
   // เพิ่มและแก้ไขข้อมูลลูกค้า
-  // เพิ่มและแก้ไขข้อมูลลูกค้า
   const saveCustomer = async (event) => {
     event.preventDefault();
 
@@ -90,7 +117,7 @@ export default function Customers() {
     try {
       setError("");
 
-      // ใช้รหัสจาก URL ตอนแก้ไข ไม่ส่ง customer_id ใน body
+      // ตอนแก้ไขให้ใช้รหัสจาก URL
       if (isEditing) {
         delete data.customer_id;
       }
@@ -99,22 +126,10 @@ export default function Customers() {
         ? `/api/customers/${editingCustomer.customer_id}`
         : "/api/customers";
 
-      const response = await fetch(url, {
+      await apiRequest(url, {
         method: isEditing ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(data),
       });
-
-      const result = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(
-          result.error ||
-          `บันทึกข้อมูลลูกค้าไม่สำเร็จ (${response.status})`
-        );
-      }
 
       await loadCustomers();
       closeModal();
@@ -136,19 +151,10 @@ export default function Customers() {
     try {
       setError("");
 
-      const response = await fetch(
+      await apiRequest(
         `/api/customers/${customer.customer_id}`,
         { method: "DELETE" }
       );
-
-      const result = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(
-          result.error ||
-          `ลบข้อมูลลูกค้าไม่สำเร็จ (${response.status})`
-        );
-      }
 
       await loadCustomers();
     } catch (err) {
@@ -161,8 +167,9 @@ export default function Customers() {
       <main className="mx-auto w-full max-w-[1600px]">
         <div className="mb-6">
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-                ข้อมูลลูกค้า
-              </h1>
+            ข้อมูลลูกค้า
+          </h1>
+
           <p className="my-3 text-sm text-[#8195b8] sm:text-base">
             Manage customer information and service contracts
           </p>
@@ -208,6 +215,7 @@ export default function Customers() {
           </p>
         )}
 
+        {/* ตารางลูกค้า */}
         <section className="overflow-hidden rounded-xl border border-[#e0e9f8] bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1100px] text-left text-sm">
@@ -384,18 +392,14 @@ export default function Customers() {
                   label="ชื่อ"
                   name="customer_firstname"
                   required
-                  defaultValue={
-                    editingCustomer?.customer_firstname ?? ""
-                  }
+                  defaultValue={editingCustomer?.customer_firstname ?? ""}
                 />
 
                 <FormField
                   label="นามสกุล"
                   name="customer_lastname"
                   required
-                  defaultValue={
-                    editingCustomer?.customer_lastname ?? ""
-                  }
+                  defaultValue={editingCustomer?.customer_lastname ?? ""}
                 />
 
                 <FormField
@@ -415,7 +419,6 @@ export default function Customers() {
                 <label className="block text-sm text-slate-700 sm:col-span-2">
                   ที่อยู่
                   <span className="ml-1 text-red-500">*</span>
-
                   <textarea
                     name="address"
                     rows={3}
@@ -428,7 +431,6 @@ export default function Customers() {
                 <label className="block text-sm text-slate-700 sm:col-span-2">
                   วันที่เริ่มใช้บริการ
                   <span className="ml-1 text-red-500">*</span>
-
                   <input
                     name="start_date"
                     type="date"
@@ -445,7 +447,6 @@ export default function Customers() {
                 <label className="block text-sm text-slate-700 sm:col-span-2">
                   ประเภทบริการ
                   <span className="ml-1 text-red-500">*</span>
-
                   <select
                     name="type_service"
                     required
@@ -496,24 +497,17 @@ function FormField({
   return (
     <label className={`block text-sm text-slate-700 ${className}`}>
       {label}
-      {required && (
-        <span className="ml-1 text-red-500">*</span>
-      )}
+      {required && <span className="ml-1 text-red-500">*</span>}
 
       <input
-        type={
-          name === "phone_number"
-            ? "tel"
-            : name === "customer_id"
-              ? "text"
-              : "text"
-        }
+        type={name === "phone_number" ? "tel" : "text"}
         name={name}
         required={required}
         readOnly={readOnly}
         defaultValue={defaultValue ?? ""}
-        className={`${inputClass} ${readOnly ? "cursor-not-allowed bg-slate-100" : ""
-          }`}
+        className={`${inputClass} ${
+          readOnly ? "cursor-not-allowed bg-slate-100" : ""
+        }`}
       />
     </label>
   );

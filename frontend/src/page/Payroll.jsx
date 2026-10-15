@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState } from "react";
 
 const API_URL = "/api";
@@ -39,44 +40,48 @@ const getBankAccount = (employee) => {
     : String(value);
 };
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || "")
-  .replace(/\/+$/, "");
+// URL ของ Backend บน Render
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL ||
+  "https://sa-bis-amcleanning.onrender.com"
+).replace(/\/+$/, "");
 
-async function apiRequest(url) {
-  const path = `/${url.replace(/^\/+/, "")}`;
+// เรียก API โดยเติม /api ให้อัตโนมัติ
+async function apiRequest(url, options = {}) {
+  const endpoint = url
+    .replace(/^\/+/, "")
+    .replace(/^api\/?/, "");
 
+  const path = `/api/${endpoint}`;
   const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
     headers: {
       Accept: "application/json",
+      ...(options.body
+        ? { "Content-Type": "application/json" }
+        : {}),
+      ...options.headers,
     },
   });
+
   const result = await response.json().catch(() => null);
 
   if (!response.ok) {
     throw new Error(
-      result?.error || `โหลดข้อมูล ${path} ไม่สำเร็จ (${response.status})`
+      result?.error ||
+        `เรียก API ${path} ไม่สำเร็จ (${response.status})`
     );
   }
 
   return result;
 }
 
+// ใช้ Backend URL เดียวกันสำหรับ PUT
 async function updateAPI(path, body) {
-  const response = await fetch(`${API_URL}${path}`, {
+  return apiRequest(path, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-
-  const result = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(
-      result.error || `บันทึกข้อมูลไม่สำเร็จ (${response.status})`
-    );
-  }
-
-  return result;
 }
 
 async function loadPayrollData() {
@@ -107,7 +112,11 @@ async function loadPayrollData() {
   };
 
   const normalizeId = (value) => {
-    if (value === null || value === undefined || String(value).trim() === "") {
+    if (
+      value === null ||
+      value === undefined ||
+      String(value).trim() === ""
+    ) {
       return "";
     }
 
@@ -182,8 +191,6 @@ async function loadPayrollData() {
 
   return { employees, attendances };
 }
-
-
 
 function Icon({ name, size = 20 }) {
   const paths = {
@@ -337,83 +344,79 @@ export default function Payroll() {
     setIsEditing(false);
   };
 
+  const handleSaveDetails = async () => {
+    if (!selectedEmployee || saving) return;
 
-const handleSaveDetails = async () => {
-  if (!selectedEmployee || saving) return;
+    const employeeId = Number(selectedEmployee.employee_id);
+    const payrollId = Number(selectedEmployee.payroll_id);
 
-  const employeeId = Number(selectedEmployee.employee_id);
-  const payrollId = Number(selectedEmployee.payroll_id);
+    const salaryText = String(editForm.salary).trim();
+    const bonusText = String(editForm.bonus).trim();
 
-  const salaryText = String(editForm.salary).trim();
-  const bonusText = String(editForm.bonus).trim();
+    const salary = Number(salaryText);
+    const bonus = Number(bonusText);
 
-  const salary = Number(salaryText);
-  const bonus = Number(bonusText);
+    if (
+      salaryText === "" ||
+      bonusText === "" ||
+      !Number.isFinite(salary) ||
+      !Number.isFinite(bonus) ||
+      salary < 0 ||
+      bonus < 0
+    ) {
+      window.alert("กรุณากรอกเงินเดือนและโบนัสเป็นตัวเลขตั้งแต่ 0 ขึ้นไป");
+      return;
+    }
 
-  if (
-    salaryText === "" ||
-    bonusText === "" ||
-    !Number.isFinite(salary) ||
-    !Number.isFinite(bonus) ||
-    salary < 0 ||
-    bonus < 0
-  ) {
-    window.alert("กรุณากรอกเงินเดือนและโบนัสเป็นตัวเลขตั้งแต่ 0 ขึ้นไป");
-    return;
-  }
+    if (!Number.isSafeInteger(employeeId) || employeeId < 1) {
+      window.alert("ไม่พบ employee_id กรุณาตรวจสอบข้อมูล API /employees");
+      return;
+    }
 
-  if (!Number.isSafeInteger(employeeId) || employeeId < 1) {
-    window.alert("ไม่พบ employee_id กรุณาตรวจสอบข้อมูล API /employees");
-    return;
-  }
+    if (!Number.isSafeInteger(payrollId) || payrollId < 1) {
+      window.alert(
+        "ไม่พบ payroll_id ของพนักงานคนนี้ กรุณาตรวจสอบข้อมูล API /payroll ว่ามี payroll_id และ employee_id หรือไม่"
+      );
+      return;
+    }
 
-  if (!Number.isSafeInteger(payrollId) || payrollId < 1) {
-    window.alert(
-      "ไม่พบ payroll_id ของพนักงานคนนี้ กรุณาตรวจสอบข้อมูล API /payroll ว่ามี payroll_id และ employee_id หรือไม่"
-    );
-    return;
-  }
+    setSaving(true);
 
-  setSaving(true);
+    try {
+      await updateAPI(`/payroll/${payrollId}`, {
+        salary,
+        bonus,
+      });
 
-  try {
-    // ใช้ payroll_id เป็นรหัสอ้างอิงสำหรับแก้เงินเดือนและโบนัส
-    await updateAPI(`/payroll/${payrollId}`, {
-      salary,
-      bonus,
-    });
+      await updateAPI(`/employees/${employeeId}`, {
+        bank_account: editForm.bank_account.trim(),
+      });
 
-    // ใช้ employee_id เป็นรหัสอ้างอิงสำหรับแก้เลขบัญชีธนาคาร
-    await updateAPI(`/employees/${employeeId}`, {
-      bank_account: editForm.bank_account.trim(),
-    });
+      const updatedEmployee = {
+        ...selectedEmployee,
+        salary,
+        bonus,
+        bank_account: editForm.bank_account.trim() || "-",
+      };
 
-    const updatedEmployee = {
-      ...selectedEmployee,
-      salary,
-      bonus,
-      bank_account: editForm.bank_account.trim() || "-",
-    };
+      setEmployees((previous) =>
+        previous.map((employee) =>
+          employee.id === updatedEmployee.id
+            ? updatedEmployee
+            : employee
+        )
+      );
 
-    setEmployees((previous) =>
-      previous.map((employee) =>
-        employee.id === updatedEmployee.id
-          ? updatedEmployee
-          : employee
-      )
-    );
+      setSelectedEmployee(updatedEmployee);
+      setIsEditing(false);
 
-    setSelectedEmployee(updatedEmployee);
-    setIsEditing(false);
-
-    window.alert("บันทึกข้อมูลลงฐานข้อมูลสำเร็จ");
-  } catch (err) {
-    window.alert(`บันทึกข้อมูลไม่สำเร็จ: ${err.message}`);
-  } finally {
-    setSaving(false);
-  }
-};
-
+      window.alert("บันทึกข้อมูลลงฐานข้อมูลสำเร็จ");
+    } catch (err) {
+      window.alert(`บันทึกข้อมูลไม่สำเร็จ: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const hasMonthlyData = month >= DATA_START_MONTH;
 
