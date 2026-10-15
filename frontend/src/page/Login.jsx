@@ -12,7 +12,7 @@ export default function Login() {
     // สำหรับทดสอบการเปลี่ยนหน้าเท่านั้น
     localStorage.setItem("isLoggedIn", "true");
 
-    navigate("/");
+    navigate("/home");
   };
   return (
     <div className="min-h-screen bg-sky-50 text-slate-700">

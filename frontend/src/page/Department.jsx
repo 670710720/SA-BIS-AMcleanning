@@ -33,7 +33,7 @@ const departmentDescriptions = {
   บัญชี:
     'ดูแลบัญชี รายรับรายจ่าย การตรวจสอบเงินเดือน และเอกสารทางการเงิน',
   ฝ่ายปฏิบัติการ:
-    'ดูแลงานทำความสะอาด การจัดพนักงานลงหน้างาน และการให้บริการลูกค้า',
+    'แม่บ้าน ดูแลงานทำความสะอาด การจัดพนักงานลงหน้างาน และการให้บริการลูกค้า',
 };
 
 function Department() {
@@ -205,127 +205,129 @@ function Department() {
 
   return (
     <section className="mx-auto w-full max-w-4xl px-5 py-5 sm:px-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-          จัดการแผนก
-        </h1>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 sm:text-base">
-          ดูข้อมูลและจัดการแผนก
-        </p>
-      </div>
-      {/* Search */}
-      <div className="relative mb-6">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2">
-          ⌕
-        </span>
+      <main className="min-w-0 px-5 py-8 sm:px-7 lg:px-10">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+            จัดการแผนก
+          </h1>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 sm:text-base">
+            ดูข้อมูลและจัดการแผนก
+          </p>
+        </div>
+        {/* Search */}
+        <div className="relative mb-6">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2">
+            ⌕
+          </span>
 
-        <input
-          type="search"
-          placeholder="ค้นหาด้วยชื่อแผนกหรือรหัสแผนก..."
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          className="h-10 w-full rounded-full border border-gray-400 bg-white pl-9 pr-4 text-sm outline-none focus:border-gray-800"
-        />
-      </div>
+          <input
+            type="search"
+            placeholder="ค้นหาด้วยชื่อแผนกหรือรหัสแผนก..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="h-10 w-full rounded-full border border-gray-400 bg-white pl-9 pr-4 text-sm outline-none focus:border-gray-800"
+          />
+        </div>
 
-      {/* Add button */}
-      <div className="mb-5 flex justify-end">
-        <button
-          type="button"
-          onClick={handleAdd}
-          disabled={saving || loading}
-          className="rounded-md bg-green-300 px-4 py-2 text-sm hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          ＋ เพิ่มแผนก
-        </button>
-      </div>
-
-      {/* Error */}
-      {error && (
-        <div
-          role="alert"
-          className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700"
-        >
-          {error}
-
+        {/* Add button */}
+        <div className="mb-5 flex justify-end">
           <button
             type="button"
-            onClick={loadDepartments}
-            className="ml-2 underline"
+            onClick={handleAdd}
+            disabled={saving || loading}
+            className="rounded-md bg-green-300 px-4 py-2 text-sm hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            ลองใหม่อีกครั้ง
+            ＋ เพิ่มแผนก
           </button>
         </div>
-      )}
 
-      {/* Department cards */}
-      {loading ? (
-        <p className="py-8 text-center text-sm text-gray-500">
-          กำลังโหลด...
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {filteredDepartments.map((department) => (
-            <article
-              key={department.id}
-              className="rounded-xl border border-gray-300 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+        {/* Error */}
+        {error && (
+          <div
+            role="alert"
+            className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700"
+          >
+            {error}
+
+            <button
+              type="button"
+              onClick={loadDepartments}
+              className="ml-2 underline"
             >
-              <h3 className="text-lg font-semibold text-gray-800">
-                {department.name}
-              </h3>
+              ลองใหม่อีกครั้ง
+            </button>
+          </div>
+        )}
 
-              <p className="mb-5 mt-1 min-h-10 text-sm leading-5 text-gray-500">
-                {departmentDescriptions[department.name] ||
-                  'แสดงรายละเอียดการทำงานของแผนก'}
+        {/* Department cards */}
+        {loading ? (
+          <p className="py-8 text-center text-sm text-gray-500">
+            กำลังโหลด...
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {filteredDepartments.map((department) => (
+              <article
+                key={department.id}
+                className="rounded-xl border border-gray-300 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+              >
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {department.name}
+                </h3>
+
+                <p className="mb-5 mt-1 min-h-10 text-sm leading-5 text-gray-500">
+                  {departmentDescriptions[department.name] ||
+                    'แสดงรายละเอียดการทำงานของแผนก'}
+                </p>
+
+                <div className="mb-4 h-px w-full bg-gray-200" />
+
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600">
+                  <span>รหัสแผนก: {department.id}</span>
+
+                  <span>
+                    พนักงานรวม:{' '}
+                    {String(department.totalEmployee).padStart(2, '0')}
+                  </span>
+                </div>
+
+                {/* Actions inside each card */}
+                <div className="flex justify-end gap-2 border-t border-gray-100 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => handleEdit(department)}
+                    disabled={saving}
+                    className="rounded-md bg-gray-200 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+                  >
+                    ✎ แก้ไข
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(department)}
+                    disabled={saving}
+                    className="rounded-md bg-red-100 px-3 py-1.5 text-sm text-red-700 hover:bg-red-200 disabled:opacity-50"
+                  >
+                    − ลบ
+                  </button>
+                </div>
+              </article>
+            ))}
+
+            {filteredDepartments.length === 0 && (
+              <p className="col-span-full py-8 text-center text-sm text-gray-500">
+                ไม่พบข้อมูลแผนก
               </p>
+            )}
+          </div>
+        )}
 
-              <div className="mb-4 h-px w-full bg-gray-200" />
-
-              <div className="mb-5 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600">
-                <span>รหัสแผนก: {department.id}</span>
-
-                <span>
-                  พนักงานรวม:{' '}
-                  {String(department.totalEmployee).padStart(2, '0')}
-                </span>
-              </div>
-
-              {/* Actions inside each card */}
-              <div className="flex justify-end gap-2 border-t border-gray-100 pt-3">
-                <button
-                  type="button"
-                  onClick={() => handleEdit(department)}
-                  disabled={saving}
-                  className="rounded-md bg-gray-200 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-300 disabled:opacity-50"
-                >
-                  ✎ แก้ไข
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDelete(department)}
-                  disabled={saving}
-                  className="rounded-md bg-red-100 px-3 py-1.5 text-sm text-red-700 hover:bg-red-200 disabled:opacity-50"
-                >
-                  − ลบ
-                </button>
-              </div>
-            </article>
-          ))}
-
-          {filteredDepartments.length === 0 && (
-            <p className="col-span-full py-8 text-center text-sm text-gray-500">
-              ไม่พบข้อมูลแผนก
-            </p>
-          )}
-        </div>
-      )}
-
-      {saving && (
-        <p className="mt-3 text-right text-xs text-gray-500">
-          บันทึกการเปลี่ยนแปลง...
-        </p>
-      )}
+        {saving && (
+          <p className="mt-3 text-right text-xs text-gray-500">
+            บันทึกการเปลี่ยนแปลง...
+          </p>
+        )}
+      </main>
 
       {/* Modal เพิ่ม / แก้ไขแผนก */}
       {isModalOpen && (

@@ -9,6 +9,7 @@ import Payroll from "./page/Payroll";
 import Employees from "./page/Employees";
 import Customers from "./page/Customers";
 import Login from "./page/Login";
+import Home from "./page/Home";
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -58,9 +59,15 @@ function App() {
         >
           <Routes>
             {/* หน้าหลัก / Login */}
+
             <Route
               path="/"
               element={<Login />}
+            />
+
+            <Route
+              path="/home"
+              element={<Home />}
             />
 
             {/* จัดการพนักงาน */}

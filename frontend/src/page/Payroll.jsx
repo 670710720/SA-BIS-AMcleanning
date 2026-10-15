@@ -31,6 +31,20 @@ const normalizeStatus = (status) => {
   return "ไม่ระบุสถานะ";
 };
 
+// อ่านเลขบัญชีจากชื่อฟิลด์ที่ API อาจส่งกลับมา
+const getBankAccount = (employee) => {
+  const value =
+    employee.bank_account ??
+    employee.bankAccount ??
+    employee.BankAccount;
+
+  if (value === null || value === undefined || String(value).trim() === "") {
+    return "-";
+  }
+
+  return String(value);
+};
+
 async function apiRequest(path) {
   const response = await fetch(`${API_URL}${path}`);
   if (!response.ok) {
@@ -81,6 +95,7 @@ async function loadPayrollData() {
       ]
         .filter(Boolean)
         .join(" "),
+      bank_account: getBankAccount(employee),
       department:
         departmentsById.get(String(employee.department_id)) ?? "-",
       salary: Number(payroll?.salary ?? 0),
@@ -747,10 +762,6 @@ export default function Payroll() {
           >
             <div className="flex items-start justify-between border-b border-slate-200 px-6 py-5 dark:border-slate-800">
               <div>
-                <p className="text-xs font-semibold tracking-wider text-blue-600 dark:text-blue-400">
-                  PAYROLL SUMMARY
-                </p>
-
                 <h2
                   id="payroll-modal-title"
                   className="mt-2 text-2xl font-bold"
@@ -804,6 +815,18 @@ export default function Payroll() {
                   <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     รหัส {selectedEmployee.employee_code} ·{" "}
                     {selectedEmployee.department}
+                  </p>
+
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                    เลขบัญชีธนาคาร:{" "}
+                    <span className="font-semibold text-slate-700 dark:text-slate-200">
+                      {String(
+                        selectedEmployee.bank_account ??
+                          selectedEmployee.bankAccount ??
+                          selectedEmployee.BankAccount ??
+                          "-"
+                      )}
+                    </span>
                   </p>
                 </div>
               </div>
