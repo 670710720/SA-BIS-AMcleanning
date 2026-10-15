@@ -1,3 +1,4 @@
+
 package main
 
 import (
@@ -360,6 +361,7 @@ func createRecord(
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
 	// สร้างรหัสลูกค้าอัตโนมัติ
 	if res.Table == "customers" {
 		tx, err := pool.Begin(r.Context())
@@ -369,15 +371,18 @@ func createRecord(
 		}
 		defer tx.Rollback(r.Context())
 
-		_, err = tx.Exec(r.Context(),
-			"LOCK TABLE customers IN EXCLUSIVE MODE")
+		_, err = tx.Exec(
+			r.Context(),
+			"LOCK TABLE customers IN EXCLUSIVE MODE",
+		)
 		if err != nil {
 			handleDBError(w, err)
 			return
 		}
 
 		var nextID int
-		err = tx.QueryRow(r.Context(),
+		err = tx.QueryRow(
+			r.Context(),
 			"SELECT COALESCE(MAX(customer_id), 0) + 1 FROM customers",
 		).Scan(&nextID)
 		if err != nil {
@@ -391,6 +396,56 @@ func createRecord(
 		}
 
 		body["customer_id"] = nextID
+
+		record, err := insertRecord(r.Context(), tx, res, body)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		if err := tx.Commit(r.Context()); err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		writeJSON(w, http.StatusCreated, record)
+		return
+	}
+
+	// สร้างรหัสเงินเดือนอัตโนมัติ
+	if res.Table == "payroll" {
+		tx, err := pool.Begin(r.Context())
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+		defer tx.Rollback(r.Context())
+
+		_, err = tx.Exec(
+			r.Context(),
+			"LOCK TABLE payroll IN EXCLUSIVE MODE",
+		)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		var nextID int
+		err = tx.QueryRow(
+			r.Context(),
+			"SELECT COALESCE(MAX(payroll_id), 0) + 1 FROM payroll",
+		).Scan(&nextID)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		if nextID > 99999 {
+			writeError(w, http.StatusConflict, "รหัสเงินเดือนเต็มแล้ว")
+			return
+		}
+
+		body["payroll_id"] = nextID
 
 		record, err := insertRecord(r.Context(), tx, res, body)
 		if err != nil {
@@ -461,6 +516,87 @@ func createRecord(
 		}
 
 		writeJSON(w, http.StatusCreated, record)
+		return
+	}
+
+	// เพิ่มพนักงานพร้อมสร้างข้อมูลเงินเดือนเริ่มต้น
+	if res.Table == "employees" {
+		tx, err := pool.Begin(r.Context())
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+		defer tx.Rollback(r.Context())
+
+		// เพิ่มข้อมูลพนักงาน
+		employeeRecord, err := insertRecord(
+			r.Context(),
+			tx,
+			res,
+			body,
+		)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		// ล็อกตารางเพื่อป้องกันการสร้าง payroll_id ซ้ำ
+		_, err = tx.Exec(
+			r.Context(),
+			"LOCK TABLE payroll IN EXCLUSIVE MODE",
+		)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		var nextID int
+		err = tx.QueryRow(
+			r.Context(),
+			"SELECT COALESCE(MAX(payroll_id), 0) + 1 FROM payroll",
+		).Scan(&nextID)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		if nextID > 99999 {
+			writeError(
+				w,
+				http.StatusConflict,
+				"รหัสเงินเดือนเต็มแล้ว",
+			)
+			return
+		}
+
+		// สร้างข้อมูลเงินเดือนเริ่มต้น
+		payrollResource := resources["payroll"]
+
+		payrollBody := map[string]any{
+			"payroll_id":  nextID,
+			"salary":      0,
+			"bonus":       0,
+			"employee_id": body["employee_id"],
+		}
+
+		_, err = insertRecord(
+			r.Context(),
+			tx,
+			payrollResource,
+			payrollBody,
+		)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		// บันทึกทั้งพนักงานและเงินเดือนพร้อมกัน
+		if err := tx.Commit(r.Context()); err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		writeJSON(w, http.StatusCreated, employeeRecord)
 		return
 	}
 
@@ -628,7 +764,9 @@ func updateRecord(
 	writeJSON(w, http.StatusOK, result)
 }
 
-// ลบข้อมูล
+
+	
+ // ลบข้อมูล
 func deleteRecord(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -642,6 +780,61 @@ func deleteRecord(
 		return
 	}
 
+	// กรณีลบพนักงาน ให้ลบข้อมูลเงินเดือนก่อน
+	if res.Table == "employees" {
+		ctx := r.Context()
+
+		tx, err := pool.Begin(ctx)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+		defer tx.Rollback(ctx)
+
+		// ลบเงินเดือนที่อ้างอิง employee_id นี้
+		_, err = tx.Exec(
+			ctx,
+			"DELETE FROM payroll WHERE employee_id = $1",
+			id,
+		)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		// จากนั้นลบข้อมูลพนักงาน
+		tag, err := tx.Exec(
+			ctx,
+			"DELETE FROM employees WHERE employee_id = $1",
+			id,
+		)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		if tag.RowsAffected() == 0 {
+			writeError(
+				w,
+				http.StatusNotFound,
+				"ไม่พบข้อมูลพนักงานที่ต้องการลบ",
+			)
+			return
+		}
+
+		// ยืนยันการลบทั้งสองตาราง
+		if err := tx.Commit(ctx); err != nil {
+			handleDBError(w, err)
+			return
+		}
+
+		writeJSON(w, http.StatusOK, map[string]string{
+			"message": "ลบข้อมูลพนักงานและเงินเดือนสำเร็จ",
+		})
+		return
+	}
+
+	// ตารางอื่นยังใช้วิธีลบแบบเดิม
 	query := fmt.Sprintf(
 		"DELETE FROM %s WHERE %s = $1",
 		res.Table,
@@ -667,6 +860,8 @@ func deleteRecord(
 		"message": "ลบข้อมูลสำเร็จ",
 	})
 }
+
+
 
 func main() {
 	if err := godotenv.Load(); err != nil {
@@ -843,6 +1038,3 @@ func main() {
 	log.Println("Backend running on :8080")
 	log.Fatal(server.ListenAndServe())
 }
-
-
-	

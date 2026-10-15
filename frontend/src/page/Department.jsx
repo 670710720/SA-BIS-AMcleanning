@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect, useState } from 'react';
 
 async function apiRequest(url, options = {}) {
@@ -136,7 +137,6 @@ function Department() {
 
     try {
       if (editingDepartment) {
-        // แก้ไขแผนก
         await apiRequest(
           `/api/departments/${editingDepartment.id}`,
           {
@@ -147,7 +147,6 @@ function Department() {
           }
         );
       } else {
-        // เพิ่มแผนก
         await apiRequest('/api/departments', {
           method: 'POST',
           body: JSON.stringify({
@@ -178,7 +177,7 @@ function Department() {
     }
   }
 
-  // ลบแผนกจากการ์ดที่กด
+  // ลบแผนกจากแถวที่เลือก
   async function handleDelete(selected) {
     const confirmed = window.confirm(
       `Delete department "${selected.name}"?`
@@ -203,41 +202,44 @@ function Department() {
     }
   }
 
+
   return (
-    <section className="mx-auto w-full max-w-4xl px-5 py-5 sm:px-8">
-      <main className="min-w-0 px-5 py-8 sm:px-7 lg:px-10">
-        <div className="mb-6">
+    <section className="mx-auto w-full max-w-none px-5 py-5 sm:px-8">
+      <main className="min-w-0 px-0 py-4 sm:px-0 lg:px-0">
+        {/* Page Header */}
+        <div className="mb-7">
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
             จัดการแผนก
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 sm:text-base">
-            ดูข้อมูลและจัดการแผนก
+            Department Management
           </p>
         </div>
+
         {/* Search */}
-        <div className="relative mb-6">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2">
+        <div className="relative mb-5">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400">
             ⌕
           </span>
-
           <input
             type="search"
             placeholder="ค้นหาด้วยชื่อแผนกหรือรหัสแผนก..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            className="h-10 w-full rounded-full border border-gray-400 bg-white pl-9 pr-4 text-sm outline-none focus:border-gray-800"
+            className="h-14 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-base text-slate-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
           />
         </div>
 
         {/* Add button */}
-        <div className="mb-5 flex justify-end">
+        <div className="mb-7 flex justify-end">
           <button
             type="button"
             onClick={handleAdd}
             disabled={saving || loading}
-            className="rounded-md bg-green-300 px-4 py-2 text-sm hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl bg-[#5485b1] px-6 py-4 text-base font-medium text-white shadow-sm transition hover:bg-[#416f99] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            ＋ เพิ่มแผนก
+            <span className="mr-2 text-lg">＋</span>
+            เพิ่มแผนก
           </button>
         </div>
 
@@ -245,10 +247,9 @@ function Department() {
         {error && (
           <div
             role="alert"
-            className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700"
+            className="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700"
           >
             {error}
-
             <button
               type="button"
               onClick={loadDepartments}
@@ -259,45 +260,60 @@ function Department() {
           </div>
         )}
 
-        {/* Department cards */}
+        {/* Department Cards */}
         {loading ? (
-          <p className="py-8 text-center text-sm text-gray-500">
+          <p className="py-8 text-center text-sm text-slate-500">
             กำลังโหลด...
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filteredDepartments.map((department) => (
               <article
                 key={department.id}
-                className="rounded-xl border border-gray-300 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                className="flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               >
-                <h3 className="text-lg font-semibold text-gray-800">
-                  {department.name}
-                </h3>
+                {/* Card Header */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="mb-2 text-xs font-medium text-slate-400">
+                      รหัสแผนก: {department.id}
+                    </p>
+                    <h3 className="break-words text-xl font-semibold text-slate-900">
+                      {department.name}
+                    </h3>
+                  </div>
 
-                <p className="mb-5 mt-1 min-h-10 text-sm leading-5 text-gray-500">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-xl text-sky-700">
+                    <span>▤</span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p className="mt-4 min-h-[60px] text-sm leading-6 text-slate-500">
                   {departmentDescriptions[department.name] ||
                     'แสดงรายละเอียดการทำงานของแผนก'}
                 </p>
 
-                <div className="mb-4 h-px w-full bg-gray-200" />
-
-                <div className="mb-5 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600">
-                  <span>รหัสแผนก: {department.id}</span>
-
-                  <span>
-                    พนักงานรวม:{' '}
+                {/* Employee Count */}
+                <div className="mt-5 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
+                  <span className="text-sm text-slate-500">
+                    พนักงานรวม
+                  </span>
+                  <span className="text-lg font-semibold text-slate-800">
                     {String(department.totalEmployee).padStart(2, '0')}
+                    <span className="ml-1 text-sm font-normal text-slate-500">
+                      คน
+                    </span>
                   </span>
                 </div>
 
-                {/* Actions inside each card */}
-                <div className="flex justify-end gap-2 border-t border-gray-100 pt-3">
+                {/* Actions */}
+                <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-4">
                   <button
                     type="button"
                     onClick={() => handleEdit(department)}
                     disabled={saving}
-                    className="rounded-md bg-gray-200 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+                    className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200 disabled:opacity-50"
                   >
                     ✎ แก้ไข
                   </button>
@@ -306,16 +322,16 @@ function Department() {
                     type="button"
                     onClick={() => handleDelete(department)}
                     disabled={saving}
-                    className="rounded-md bg-red-100 px-3 py-1.5 text-sm text-red-700 hover:bg-red-200 disabled:opacity-50"
+                    className="rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100 disabled:opacity-50"
                   >
-                    − ลบ
+                    ลบ
                   </button>
                 </div>
               </article>
             ))}
 
             {filteredDepartments.length === 0 && (
-              <p className="col-span-full py-8 text-center text-sm text-gray-500">
+              <p className="col-span-full py-10 text-center text-sm text-slate-500">
                 ไม่พบข้อมูลแผนก
               </p>
             )}
@@ -323,7 +339,7 @@ function Department() {
         )}
 
         {saving && (
-          <p className="mt-3 text-right text-xs text-gray-500">
+          <p className="mt-3 text-right text-xs text-slate-500">
             บันทึกการเปลี่ยนแปลง...
           </p>
         )}

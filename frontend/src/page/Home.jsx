@@ -242,7 +242,7 @@ function Home() {
             <SummaryCard
               title="พนักงานทั้งหมด"
               value={`${data.employees.length} คน`}
-              description="Employee"
+              description="พนักงาน"
               accent="bg-emerald-100 text-emerald-700"
               icon={<Users size={24} strokeWidth={2} />}
               loading={loading}
@@ -252,7 +252,7 @@ function Home() {
             <SummaryCard
               title="ลูกค้าทั้งหมด"
               value={`${data.customers.length} ราย`}
-              description="Customer"
+              description="ลูกค้า"
               accent="bg-blue-100 text-blue-700"
               icon={<Handshake size={24} strokeWidth={2} />}
               loading={loading}
@@ -262,7 +262,7 @@ function Home() {
             <SummaryCard
               title="แผนกทั้งหมด"
               value={`${data.departments.length} แผนก`}
-              description="Department"
+              description="แผนก"
               accent="bg-amber-100 text-amber-700"
               icon={<Building2 size={24} strokeWidth={2} />}
               loading={loading}
@@ -272,7 +272,7 @@ function Home() {
             <SummaryCard
               title="ข้อมูลเงินเดือน"
               value={`${data.payroll.length} รายการ`}
-              description="Payroll records"
+              description="เงินเดือนพนักงาน"
               accent="bg-violet-100 text-violet-700"
               icon={<Wallet size={24} strokeWidth={2} />}
               loading={loading}
@@ -364,7 +364,7 @@ function Home() {
               </h3>
 
               <p className="mt-2 text-sm text-slate-500">
-                สรุปเงินเดือนและโบนัสจากข้อมูล Payroll
+                สรุปเงินเดือนและโบนัสจากข้อมูลเงินเดือนพนักงาน
               </p>
 
               <div className="mt-5">
@@ -414,7 +414,7 @@ function Home() {
 
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm text-slate-500">
-                        รายการ Payroll
+                        รายการ เงินเดือน
                       </span>
 
                       <span className="text-sm font-semibold text-slate-800">
@@ -422,9 +422,9 @@ function Home() {
                       </span>
                     </div>
 
-                    <p className="text-xs leading-5 text-slate-400">
+                    {/* <p className="text-xs leading-5 text-slate-400">
                       ยอดรวมตามรายการที่ API ส่งมา ไม่ใช่การยืนยันยอดจ่ายเงินจริง
-                    </p>
+                    </p> */}
                   </div>
                 )}
               </div>
