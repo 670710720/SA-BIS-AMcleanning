@@ -21,7 +21,7 @@ export default function Header({ darkMode, setDarkMode }) {
         }`}
     >
       {/* Logo + Company Name */}
-      <Link to="/" className="flex items-center gap-3">
+      <Link to="/home" className="flex items-center gap-3">
         <img
           src="/AMlogo.jpg"
           alt="AM Cleaning Logo"
