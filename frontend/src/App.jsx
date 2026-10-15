@@ -9,6 +9,7 @@ import Payroll from "./page/Payroll";
 import Employees from "./page/Employees";
 import Customers from "./page/Customers";
 import Login from "./page/Login";
+import Home from "./page/Home";
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -24,11 +25,10 @@ function App() {
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-300 ${
-        darkMode
+      className={`min-h-screen transition-colors duration-300 ${darkMode
           ? "bg-gray-950 text-white"
           : "bg-gray-50 text-gray-900"
-      }`}
+        }`}
     >
       {/* Header: ซ่อนในหน้า Login */}
       {!isLoginPage && (
@@ -48,19 +48,23 @@ function App() {
 
         {/* Main Content */}
         <main
-          className={`min-h-[calc(100vh-5rem)] p-8 transition-colors duration-300 ${
-            isLoginPage ? "ml-0" : "ml-64"
-          } ${
-            darkMode
+          className={`min-h-[calc(100vh-5rem)] p-8 transition-colors duration-300 ${isLoginPage ? "ml-0" : "ml-64"
+            } ${darkMode
               ? "bg-gray-950 text-white"
               : "bg-gray-50 text-gray-900"
-          }`}
+            }`}
         >
           <Routes>
             {/* หน้าหลัก / Login */}
             <Route
               path="/"
               element={<Login />}
+            />
+            
+            {/* Dashboard / Home */}
+            <Route
+              path="/home"
+              element={<Home />}
             />
 
             {/* จัดการพนักงาน */}

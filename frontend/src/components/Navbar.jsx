@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { path: "/", label: "หน้าหลัก", icon: House },
+  { path: "/home", label: "หน้าหลัก", icon: House },
   { path: "/employee", label: "จัดการพนักงาน", icon: Users },
   { path: "/department", label: "จัดการตำแหน่ง", icon: Briefcase },
   { path: "/customer", label: "ข้อมูลลูกค้า", icon: UserCheck },
