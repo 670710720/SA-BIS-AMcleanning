@@ -39,8 +39,12 @@ const getBankAccount = (employee) => {
     : String(value);
 };
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 async function apiRequest(path) {
-  const response = await fetch(`${API_URL}${path}`);
+  const response = await fetch(
+  `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`,
+  )
   const result = await response.json().catch(() => null);
 
   if (!response.ok) {

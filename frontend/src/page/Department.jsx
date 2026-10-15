@@ -1,14 +1,13 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 async function apiRequest(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-      ...options.headers,
-    },
-  });
+   const response = await fetch(
+  `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`,
+  )
 
   const text = await response.text();
   let data = null;
